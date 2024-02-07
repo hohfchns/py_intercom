@@ -10,6 +10,14 @@ class PromptType(Enum):
     COMMAND = 1,
     JUNK = 2
 
+
+PIPER_LANGS = [ "en_US" ]
+GTTS_LANGS = [ "he_IL" ]
+
+GTTS_LANG_FORMAT_MAP = {
+    "he_IL": "iw"
+}
+
 KEYWORDS = \
 {
     "en_US": ["intercom"],
@@ -23,7 +31,10 @@ COMMANDS = \
             "command": "set_language",
             "params": ["he_IL"],
             "generic_name": "Hebrew",
-            "triggers": [["set", "language", "to", "hebrew"]]
+            "triggers": [
+              ["set", "language", "hebrew"],
+              ["change", "language", "hebrew"],
+            ]
         },
         {
             "command": "turn_off",
@@ -54,7 +65,7 @@ COMMANDS = \
     ]
 }
 
-CURRENT_LANGUAGE = "he_IL"
+CURRENT_LANGUAGE = "en_US"
 
 shut_down_requested: bool = False
 
@@ -114,7 +125,7 @@ def wait_for_voice_prompt(recognizer: sr.Recognizer, trigger_words:list[str]=[])
             for trigger in command["triggers"]:
                 valid = True
                 for tw in trigger:
-                    if not tw in prompt:
+                    if not tw.lower() in prompt.lower():
                         valid = False
                         continue
 
@@ -165,6 +176,11 @@ def main(argv) -> int:
 
     subprocess.check_call(f"{gpt_cmd} --clear-history", shell=True)
 
+    gtts_cmd = "gtts-cli"
+    if shutil.which(gtts_cmd) == None:
+        print(f"ChatGPT command `{gtts_cmd}` not installed?", file=sys.stderr)
+        return 1
+
     piper_cmd = "piper-tts"
     if shutil.which(piper_cmd) == None:
         print(f"ChatGPT command `{piper_cmd}` not installed?", file=sys.stderr)
@@ -197,11 +213,15 @@ def main(argv) -> int:
             continue
 
         voices_path = "/usr/share/piper-voices"
-        subprocess.Popen(f"play {voices_path}/beep.mp3", shell=True)
+        subprocess.check_call(f"play {voices_path}/beep.mp3", shell=True)
 
         cmd = ""
         if prompt_type == PromptType.USER:
-            cmd = f"{gpt_cmd} -q \"{prompt}. Talk to me in English.\" | {piper_cmd} --model {voices_path}/{voice} --output_file /tmp/piper_tmp.wav && {play_cmd} /tmp/piper_tmp.wav"
+            if CURRENT_LANGUAGE in PIPER_LANGS:
+                cmd = f"{gpt_cmd} -q \"{prompt}\" | {piper_cmd} --model {voices_path}/{voice} --output_file /tmp/piper_tmp.wav && {play_cmd} /tmp/piper_tmp.wav"
+            elif CURRENT_LANGUAGE in GTTS_LANGS:
+                cmd = f"{gtts_cmd} -l {GTTS_LANG_FORMAT_MAP[CURRENT_LANGUAGE]} \"$({gpt_cmd} -q \"{prompt}\")\" --output /tmp/gtts_tmp.mp3 && {play_cmd} /tmp/gtts_tmp.mp3"
+                print(f"EXECUTING `{cmd}`")
         else:
             cmd = f"echo \"{prompt}\" | {piper_cmd} --model {voices_path}/{voice} --output_file /tmp/piper_tmp.wav && {play_cmd} /tmp/piper_tmp.wav"
 
