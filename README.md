@@ -32,7 +32,7 @@ Create a new virtual environent:
 ``` bash
 env_name=".venv"
 python -m venv $env_name
-.venv/bin/activate # Will have to be run one every new shell
+source $env_name/bin/activate # Will have to be run one every new shell
 ```
 
 Install the python dependencies:
