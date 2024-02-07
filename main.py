@@ -100,9 +100,6 @@ def convert_voice_to_text(recognizer: sr.Recognizer, audio) -> tuple[str, int]:
         return (f"Error; {e}", 1)
 
 def get_voice_data(recognizer: sr.Recognizer) -> object:
-    global _listen_mutex
-    global _listen_mutex_data
-
     with sr.Microphone() as mic:
         print("Listening...")
 
@@ -111,6 +108,9 @@ def get_voice_data(recognizer: sr.Recognizer) -> object:
             data = recognizer.listen(mic, timeout=3, phrase_time_limit=10)
         except sr.WaitTimeoutError:
             data = None
+        except Exception:
+            print(e)
+            raise RuntimeError
 
         print("Got audio.")
         return data
@@ -149,7 +149,8 @@ def wait_for_voice_prompt(recognizer: sr.Recognizer, trigger_words:list[str]=[])
         prompt, err = convert_voice_to_text(recognizer, voice)
 
         if err != 0:
-            raise RuntimeError(f"Parsing voice data received error {err}: `{prompt}`")
+            err_str = f"Parsing voice data received error {err}: `{prompt}`"
+            raise RuntimeError(err_str)
 
         cmd, cmd_params = find_command(prompt)
         if cmd:
@@ -199,7 +200,9 @@ def main(argv) -> int:
             print(f"Voices path `{voices_path}` does not exist, and could not create it. Please create the path and import your voices there.\nmkdir error: `{e}`", file=sys.stderr)
             return 1
 
-    voice = "en/en_US/ryan/low/en_US-ryan-low.onnx"
+    # voice = "en/en_US/ryan/low/en_US-ryan-low.onnx"
+    voice = "en/en_GB/alba/medium/en_GB-alba-medium.onnx"
+
 
     if not os.path.isfile(voices_path + "/" + voice):
         print(f"voice `{voice}` not found in `{voices_path}`.")
@@ -207,7 +210,11 @@ def main(argv) -> int:
 
     recognizer = sr.Recognizer()
     while not shut_down_requested:
-        prompt, prompt_type = wait_for_voice_prompt(recognizer, KEYWORDS[CURRENT_LANGUAGE])
+        try:
+            prompt, prompt_type = wait_for_voice_prompt(recognizer, KEYWORDS[CURRENT_LANGUAGE])
+        except RuntimeError as e:
+            print(e)
+            continue
 
         if not prompt:
             continue
