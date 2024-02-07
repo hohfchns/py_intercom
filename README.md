@@ -7,7 +7,7 @@ This project is currently Linux exclusive, however it might run in WSL ¯\\_(ツ
 
 ### Packages:
 - `piper` - For Text To Speech
-- `play` - For playing sounds
+- `play` - For playing sounds (`sox` package)
 - `chatgpt` - For ChatGPT integration; [get here](https://github.com/kardolus/chatgpt-cli)
 
 ***You must have all packages above in your PATH***
@@ -37,7 +37,7 @@ source $env_name/bin/activate # Will have to be run one every new shell
 
 Install the python dependencies:
 ``` bash
-$env_name/bin/pip install SpeechRecognition PyAudio
+$env_name/bin/pip install SpeechRecognition PyAudio gtts
 ```
 
 Run the project:
