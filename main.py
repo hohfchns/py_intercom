@@ -24,62 +24,17 @@ KEYWORDS = \
     "he_IL": ["אינטרקום"]
 }
 
-COMMANDS = \
-{
-    "en_US": [
-        {
-            "command": "set_language",
-            "params": ["he_IL"],
-            "generic_name": "Hebrew",
-            "triggers": [
-              ["set", "language", "hebrew"],
-              ["change", "language", "hebrew"],
-            ]
-        },
-        {
-            "command": "turn_off",
-            "triggers": [
-                ["turn", "off"],
-                ["shut", "yourself" "off"],
-                ["shut", "yourself" "down"],
-            ]
-        }
-    ],
-    "he_IL": [
-        {
-            "command": "set_language",
-            "generic_name": "English",
-            "params": ["en_US"],
-            "triggers": [
-                ["שנה", "שפה", "ל", "אנגלית"],
-                ["חליף", "שפה", "ל", "אנגלית"],
-            ]
-        },
-        {
-            "command": "turn_off",
-            "triggers": [
-                ["תכבה", "את", "עצמך"],
-                ["תסגור", "את", "עצמך"],
-            ]
-        }
-    ]
-}
-
-CURRENT_LANGUAGE = "en_US"
-
-shut_down_requested: bool = False
-
 class CommandsInterface():
     @staticmethod
-    def execute_command(method_name: str, method_params: list):
-        command_function = getattr(CommandsInterface, method_name)
-        print(f"Executing command `{method_name}` with params `{method_params}`")
+    def execute_command(command_id: str, method_params: list):
+        command_function = COMMANDS[CURRENT_LANGUAGE][command_id]["callback"]
+        print(f"Executing command `{command_id}` with params `{method_params}`")
         return command_function(*method_params)
 
     @staticmethod
     def set_language(to: str) -> str:
         global CURRENT_LANGUAGE
-        generic_name = COMMANDS[CURRENT_LANGUAGE][0]["generic_name"]
+        generic_name = COMMANDS[CURRENT_LANGUAGE]["set_language"]["generic_name"]
         CURRENT_LANGUAGE = to
         return f"Setting language to {generic_name}"
 
@@ -88,6 +43,79 @@ class CommandsInterface():
         global shut_down_requested
         shut_down_requested = True
         return f"Shutting down"
+
+    @staticmethod
+    def shut_down_computer() -> str:
+        subprocess.Popen("sleep 5 && systemctl poweroff", shell=True) 
+        return COMMANDS[CURRENT_LANGUAGE]["shut_down_computer"]["message"]
+
+
+COMMANDS = \
+{
+    "en_US": {
+        "set_language": {
+            "callback": CommandsInterface.set_language,
+            "params": ["he_IL"],
+            "generic_name": "Hebrew",
+            "triggers": [
+              ["set", "language", "hebrew"],
+              ["change", "language", "hebrew"],
+            ]
+        },
+        "turn_off": {
+            "callback": CommandsInterface.turn_off,
+            "triggers": [
+                ["turn", "off"],
+                ["shut", "yourself" "off"],
+                ["shut", "yourself" "down"],
+            ]
+        },
+        "shut_down_computer": {
+            "callback": CommandsInterface.shut_down_computer,
+            "message": "Shutting down the computer",
+            "triggers": [
+                ["shut down the computer now"],
+                ["shut off the computer now"],
+                ["turn off the computer now"],
+                ["shut down the computer immediately"],
+                ["shut off the computer immediately"],
+                ["turn off the computer immediately"]
+            ]
+        }
+    },
+    "he_IL": {
+        "set_language": {
+            "callback": CommandsInterface.set_language,
+            "generic_name": "English",
+            "params": ["en_US"],
+            "triggers": [
+                ["שנה", "שפה", "ל", "אנגלית"],
+                ["חליף", "שפה", "ל", "אנגלית"],
+            ]
+        },
+        "turn_off": {
+            "callback": CommandsInterface.turn_off,
+            "triggers": [
+                ["תכבה", "את", "עצמך"],
+                ["תסגור", "את", "עצמך"],
+            ]
+        },
+       "shut_down_computer": {
+            "callback": CommandsInterface.shut_down_computer,
+            "message": "מכבה את המחשב",
+            "triggers": [
+                ["תכבה את המחשב עכשיו"],
+                ["תסגור את המחשב עכשיו"],
+                ["תכבה את המחשב במיידית"],
+                ["תסגור את המחשב במיידית"]
+            ]
+        }
+    }
+}
+
+CURRENT_LANGUAGE = "he_IL"
+
+shut_down_requested: bool = False
 
 def convert_voice_to_text(recognizer: sr.Recognizer, audio) -> tuple[str, int]:
     try:
@@ -108,7 +136,7 @@ def get_voice_data(recognizer: sr.Recognizer) -> object:
             data = recognizer.listen(mic, timeout=3, phrase_time_limit=10)
         except sr.WaitTimeoutError:
             data = None
-        except Exception:
+        except Exception as e:
             print(e)
             raise RuntimeError
 
@@ -121,7 +149,8 @@ def wait_for_voice_prompt(recognizer: sr.Recognizer, trigger_words:list[str]=[])
 
     def find_command(prompt) -> tuple[str, list]:
         global CURRENT_LANGUAGE
-        for command in COMMANDS[CURRENT_LANGUAGE]:
+        for command_id in COMMANDS[CURRENT_LANGUAGE]:
+            command = COMMANDS[CURRENT_LANGUAGE][command_id]
             for trigger in command["triggers"]:
                 valid = True
                 for tw in trigger:
@@ -131,7 +160,7 @@ def wait_for_voice_prompt(recognizer: sr.Recognizer, trigger_words:list[str]=[])
 
                 if valid:
                     params = command["params"] if "params" in command else []
-                    return command["command"], params
+                    return command_id, params
 
         return "", []
 
@@ -152,14 +181,17 @@ def wait_for_voice_prompt(recognizer: sr.Recognizer, trigger_words:list[str]=[])
             err_str = f"Parsing voice data received error {err}: `{prompt}`"
             raise RuntimeError(err_str)
 
-        cmd, cmd_params = find_command(prompt)
-        if cmd:
-            print(f"Received command `{cmd}`")
-            response = CommandsInterface.execute_command(cmd, cmd_params)
+        if not prompt:
+            return "", PromptType.JUNK
+
+        cmd_id, cmd_params = find_command(prompt)
+        if cmd_id:
+            print(f"Received command `{cmd_id}`")
+            response = CommandsInterface.execute_command(cmd_id, cmd_params)
             if response:
                 return response, PromptType.COMMAND
             else:
-                return f"Command `{cmd}` executed.", PromptType.COMMAND
+                return f"Command `{cmd_id}` executed.", PromptType.COMMAND
         else:
             print(f"Received prompt `{prompt}`")
 
@@ -228,10 +260,13 @@ def main(argv) -> int:
                 cmd = f"{gpt_cmd} -q \"{prompt}\" | {piper_cmd} --model {voices_path}/{voice} --output_file /tmp/piper_tmp.wav && {play_cmd} /tmp/piper_tmp.wav"
             elif CURRENT_LANGUAGE in GTTS_LANGS:
                 cmd = f"{gtts_cmd} -l {GTTS_LANG_FORMAT_MAP[CURRENT_LANGUAGE]} \"$({gpt_cmd} -q \"{prompt}\")\" --output /tmp/gtts_tmp.mp3 && {play_cmd} /tmp/gtts_tmp.mp3"
-                print(f"EXECUTING `{cmd}`")
         else:
-            cmd = f"echo \"{prompt}\" | {piper_cmd} --model {voices_path}/{voice} --output_file /tmp/piper_tmp.wav && {play_cmd} /tmp/piper_tmp.wav"
+            if CURRENT_LANGUAGE in PIPER_LANGS:
+                cmd = f"echo \"{prompt}\" | {piper_cmd} --model {voices_path}/{voice} --output_file /tmp/piper_tmp.wav && {play_cmd} /tmp/piper_tmp.wav"
+            elif CURRENT_LANGUAGE in GTTS_LANGS:
+                cmd = f"{gtts_cmd} -l {GTTS_LANG_FORMAT_MAP[CURRENT_LANGUAGE]} \"{prompt}\" --output /tmp/gtts_tmp.mp3 && {play_cmd} /tmp/gtts_tmp.mp3"
 
+        print(f"Executing command `{cmd}`")
         subprocess.Popen(cmd, shell=True)
 
     return 0
