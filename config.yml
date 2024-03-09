@@ -1,0 +1,24 @@
+intercom:
+  activation_keywords:
+    "en_US" : [ "intercom" ]
+    "he_IL" : [ "אינטרקום" ]
+
+  "prompt_language_map":
+    "he_IL": "Hebrew"
+    "en_US": "English"
+
+  prompt_prepend: "Your name is Intercom. You are an AI assistant, similar to Jarvis."
+
+tts:
+  use_gpu: True
+
+  models:
+    "en_US" : "tts_models/eng/fairseq/vits"
+    "he_IL" : "tts_models/heb/fairseq/vits"
+
+  "gtts_language_map":
+    "he_IL": "iw"
+    "en_US": "en"
+
+default_language: "he_IL"
+

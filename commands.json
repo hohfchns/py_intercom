@@ -1,0 +1,68 @@
+{
+    "en_US": {
+        "set_language": {
+            "callback_method": "CommandsInterface.set_language",
+            "generic_name": "Hebrew",
+            "message": "Setting language to Hebrew",
+            "args": ["he_IL"],
+            "triggers": [
+              ["set", "language", "hebrew"],
+              ["change", "language", "hebrew"]
+            ]
+        },
+        "turn_off": {
+            "callback": "CommandsInterface.turn_off",
+            "triggers": [
+                ["turn", "off"],
+                ["shut", "yourself", "off"],
+                ["shut", "yourself", "down"],
+                ["shut", "up"]
+            ],
+            "message": "Shutting down."
+        },
+        "shut_down_computer": {
+            "callback": "CommandsInterface.shut_down_computer",
+            "message": "Shutting down the computer",
+            "triggers": [
+                ["shut down the computer now"],
+                ["shut off the computer now"],
+                ["turn off the computer now"],
+                ["shut down the computer immediately"],
+                ["shut off the computer immediately"],
+                ["turn off the computer immediately"]
+            ]
+        }
+    },
+    "he_IL": {
+        "set_language": {
+            "callback": "CommandsInterface.set_language",
+            "generic_name": "English",
+            "message": "משנה שפה לאנגלית",
+            "args": ["en_US"],
+            "triggers": [
+                ["שנה", "שפה", "ל", "אנגלית"],
+                ["חליף", "שפה", "ל", "אנגלית"]
+            ]
+        },
+        "turn_off": {
+            "callback": "CommandsInterface.turn_off",
+            "triggers": [
+                ["תכבה", "את", "עצמך"],
+                ["תסגור", "את", "עצמך"],
+                ["שתוק"],
+                ["סתום", "פה"]
+            ],
+            "message": "מתכבה..."
+        },
+       "shut_down_computer": {
+            "callback": "CommandsInterface.shut_down_computer",
+            "message": "מכבה את המחשב",
+            "triggers": [
+                ["תכבה את המחשב עכשיו"],
+                ["תסגור את המחשב עכשיו"],
+                ["תכבה את המחשב במיידית"],
+                ["תסגור את המחשב במיידית"]
+            ]
+        }
+    }
+}
