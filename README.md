@@ -47,11 +47,13 @@ $env_name/bin/python main.py
 
 # Usage
 
-A simple run script could be written like the following:
+A simple autorun script could be written like the following:
 ``` bash
 #!/bin/bash
 cd py_intercom_dir
 export OPENAI_API_KEY="sk-the-rest-of-the-key"
+# In the case conda does not recognize the activate command, uncomment the below line
+# eval "$(conda shell.bash hook)"
 conda activate py-intercom
 python main.py
 ```
