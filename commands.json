@@ -1,7 +1,7 @@
 {
     "en_US": {
         "set_language": {
-            "callback_method": "CommandsInterface.set_language",
+            "callback": "CommandsInterface.set_language",
             "generic_name": "Hebrew",
             "message": "Setting language to Hebrew",
             "args": ["he_IL"],
@@ -21,7 +21,10 @@
             "message": "Shutting down."
         },
         "shut_down_computer": {
-            "callback": "CommandsInterface.shut_down_computer",
+            "callback": "CommandsInterface.shut_down",
+            "is_remote": true,
+            "remote_address": "BROADCAST",
+            "remote_and_local": false,
             "message": "Shutting down the computer",
             "triggers": [
                 ["shut down the computer now"],
@@ -55,7 +58,10 @@
             "message": "מתכבה..."
         },
        "shut_down_computer": {
-            "callback": "CommandsInterface.shut_down_computer",
+            "callback": "CommandsInterface.shut_down",
+            "is_remote": true,
+            "remote_address": "BROADCAST",
+            "remote_and_local": false,
             "message": "מכבה את המחשב",
             "triggers": [
                 ["תכבה את המחשב עכשיו"],

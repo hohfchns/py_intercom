@@ -27,7 +27,10 @@ class CommandManager:
     def execute(self, command_id: str, language: str) -> str:
         command: dict = self._command_map[language][command_id]
         if not command or not "callback" in command:
-            return f"Command {command_id} not found"
+            msg = f"Command {command_id} not found"
+            log.error(msg)
+            log.debug(f"Command map: `{self._command_map}`")
+            return msg
 
         CommandManager.say = None
 

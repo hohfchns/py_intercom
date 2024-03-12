@@ -18,4 +18,5 @@ dependencies:
 
   - pip:
     - playsound==1.3.0
-    - piney-event==0.0.2
+    - piney-event==0.0.3
+    - netifaces==0.11.0

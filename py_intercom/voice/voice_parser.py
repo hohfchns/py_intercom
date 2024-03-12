@@ -3,12 +3,14 @@ import speech_recognition as sr
 import logging as log
 
 class VoiceParser:
-    def __init__(self):
-        pass
+    def __init__(self, energy_threshold: int = 100, timeout: float = 3.0, phrase_time_limit: float = 10, adjust_for_ambient_noise: bool = False):
+        self.energy_threshold = energy_threshold
+        self.timeout = timeout
+        self.phrase_time_limit = phrase_time_limit
+        self.adjust_for_ambient_noise = adjust_for_ambient_noise
 
     def convert_voice_to_text(self, recognizer: sr.Recognizer, audio, language: str) -> tuple[str, int]:
         try:
-            global CURRENT_LANGUAGE
             text = recognizer.recognize_google(audio, language=language)
             return (text, 0)
         except sr.UnknownValueError:
@@ -20,9 +22,11 @@ class VoiceParser:
         with sr.Microphone() as mic:
             log.info("Listening...")
 
-            recognizer.energy_threshold = 100
+            recognizer.energy_threshold = self.energy_threshold
             try:
-                data = recognizer.listen(mic, timeout=3, phrase_time_limit=10)
+                if self.adjust_for_ambient_noise:
+                    recognizer.adjust_for_ambient_noise(mic)
+                data = recognizer.listen(mic, timeout=self.timeout, phrase_time_limit=self.phrase_time_limit)
             except sr.WaitTimeoutError:
                 data = None
             except Exception as e:

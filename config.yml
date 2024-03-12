@@ -1,3 +1,14 @@
+networking:
+  is_networked: False
+  is_server: False
+  server_ip: ""
+
+voice:
+  energy_threshold: 100
+  timeout: 3
+  phrase_time_limit: 10
+  adjust_for_ambient_noise: false
+
 intercom:
   activation_keywords:
     "en_US" : [ "intercom" ]
@@ -9,16 +20,13 @@ intercom:
 
   prompt_prepend: "Your name is Intercom. You are an AI assistant, similar to Jarvis."
 
+  default_language: "he_IL"
+
 tts:
   use_gpu: True
-
-  models:
-    "en_US" : "tts_models/eng/fairseq/vits"
-    "he_IL" : "tts_models/heb/fairseq/vits"
 
   "gtts_language_map":
     "he_IL": "iw"
     "en_US": "en"
 
-default_language: "he_IL"
-
+log_level: "INFO"
