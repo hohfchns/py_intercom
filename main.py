@@ -37,18 +37,40 @@ class CommandsInterface():
         return command_conf["message"]
 
 class App:
+    def start(self) -> None:
+        """
+        Will start the app, parsing commands from cli, setting up the main loop, etc.
+        """
+        plac.call(self.main)
+
     def __init__(self) -> None:
         self.intercom: Optional[Intercom] = None
+        self.commands_extension: Optional[type | object] = None
+
+    def set_extension(self, handler: type | object) -> None:
+        """
+        :param handler: Commands starting with the `CommandsExtension` callback will be forwarded to `handler`, ideally provide as `type` (class name) for static method usage, or as `object` for member funtion usage.
+        """
+        self.commands_extension = handler
 
     def on_command_requested(self, command_id: str, language: str, command_map: dict) -> None:
         command = command_map[language][command_id]
         callback_id = command["callback"]
-        if not callback_id.startswith("CommandsInterface."):
+        if not callback_id.startswith("CommandsInterface.") and not callback_id.startswith("CommandsExtension."):
             return
 
-        cb = getattr(CommandsInterface, callback_id.split(".")[1])
-        if not cb:
-            return
+        _ci, func = callback_id.split(".")
+        cb = None
+        try:
+            cb = getattr(CommandsInterface, func)
+        except:
+            if not self.commands_extension:
+                return
+
+            try:
+                cb = getattr(self.commands_extension, func)
+            except:
+                return
 
         args = command["args"] if "args" in command else []
         kwargs = command["kwargs"] if "kwargs" in command else {}
@@ -114,6 +136,6 @@ class App:
 
 if __name__ == "__main__":
     app = App()
-    plac.call(app.main)
+    app.start()
 
 
