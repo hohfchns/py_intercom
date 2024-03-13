@@ -41,7 +41,7 @@ class App:
         """
         Will start the app, parsing commands from cli, setting up the main loop, etc.
         """
-        plac.call(self.main)
+        plac.call(self._main)
 
     def __init__(self) -> None:
         self.intercom: Optional[Intercom] = None
@@ -53,7 +53,7 @@ class App:
         """
         self.commands_extension = handler
 
-    def on_command_requested(self, command_id: str, language: str, command_map: dict) -> None:
+    def _on_command_requested(self, command_id: str, language: str, command_map: dict) -> None:
         command = command_map[language][command_id]
         callback_id = command["callback"]
         if not callback_id.startswith("CommandsInterface.") and not callback_id.startswith("CommandsExtension."):
@@ -98,7 +98,7 @@ class App:
 
     @opt("config_file", abbrev="C")
     @opt("commands_file", abbrev="c")
-    def main(self, config_file: str = "config.yml", commands_file: str = "commands.json") -> int:
+    def _main(self, config_file: str = "config.yml", commands_file: str = "commands.json") -> int:
         config = {}
         with open(config_file, "r") as f:
             config = yaml.safe_load(f)
@@ -120,12 +120,12 @@ class App:
 
         self.intercom = Intercom(config, command_map)
 
-        self.intercom.command_requested.connect(self.on_command_requested)
+        self.intercom.command_requested.connect(self._on_command_requested)
         CommandsInterface.set_language_requested.connect(self._on_set_language_requested)
         CommandsInterface.shut_off.connect(self.intercom.stop_main_loop)
 
         self.intercom.start_main_loop()
-        while self.intercom.main_loop and self.intercom.main_loop.is_alive():
+        while self.intercom._main_loop and self.intercom._main_loop.is_alive():
             try:
                 pass
             except KeyboardInterrupt:
