@@ -7,7 +7,7 @@ from py_intercom.networking.intercom_server import IntercomServer
 from py_intercom.tts.tts_wrapper import TTSWrapper
 from py_intercom.voice.voice_parser import VoiceParser 
 from py_intercom.command.command_manager import CommandManager
-from helpers.openai_wrapper import GptWrapper
+from py_intercom.llm.llm import LLM
 from piney_event.event import TypedEvent
 
 class Intercom:
@@ -53,7 +53,20 @@ class Intercom:
         self._command_manager.set_command_map(command_map)
         CommandManager.callback_requested.connect(self._on_command_requested)
 
-        self._gpt: GptWrapper = GptWrapper()
+        llm_type: str = "gemini"
+        conversation_starter: str = "Your name is Intercom. You are an AI assistant."
+        model: Optional[str] = None
+        if "ai" in config:
+            if "type" in config["ai"]:
+                llm_type = config["ai"]["type"]
+            if "conversation_starter" in config["ai"]:
+                conversation_starter = config["ai"]["conversation_starter"]
+            if "model" in config["ai"]:
+                model = config["ai"]["model"]
+
+        t = LLM.Type.from_str(llm_type)
+        self._llm: LLM = LLM(t if t else LLM.Type.GEMINI, conversation_starter, model_name=model)
+        self._llm.start_conversation()
 
         self._tts: TTSWrapper = TTSWrapper(self._config["tts"])
         self._tts_queue: list[str] = []
@@ -75,8 +88,8 @@ class Intercom:
     def process_prompt(self, prompt: str) -> Optional[str]:
         return self._command_manager.parse_and_execute(prompt, self._language)
 
-    def get_gpt_response(self, prompt: str) -> str:
-        return self._gpt.get_response(prompt)
+    def get_ai_response(self, prompt: str) -> str:
+        return self._llm.get_response(prompt)
     
     def send_to_tts(self, text: str) -> None:
         log.debug(f"Sending text {text} to TTS")
@@ -117,19 +130,19 @@ class Intercom:
                 if command:
                     continue
 
-                prompt_prepend = self._config["intercom"]["prompt_prepend"]
+                prompt_prepend = self._config["intercom"]["prompt_prepend"] if "prompt_prepend" in self._config["intercom"] else ""
                 current_language = self._config["intercom"]["prompt_language_map"][self._language]
-                gpt_prompt = f"{prompt_prepend}. Speak to me in {current_language}. {prompt}"
-                log.info(f"Sending prompt `{gpt_prompt}` to GPT")
+                ai_prompt = f"{prompt_prepend}. Speak to me in {current_language}. {prompt}"
+                log.info(f"Sending prompt `{ai_prompt}` to LLM")
 
-                gpt_response = self._gpt.get_response(gpt_prompt)
-                log.info(f"Got GPT response `{gpt_response}`")
+                ai_response = self.get_ai_response(ai_prompt)
+                log.info(f"Got LLM response `{ai_response}`")
 
-                if not gpt_response:
-                    log.info(f"GPT response invalid, skipping TTS.")
+                if not ai_response:
+                    log.info(f"LLM response invalid, skipping TTS.")
                     continue
 
-                self.send_to_tts(gpt_response)
+                self.send_to_tts(ai_response)
             except Exception as e:
                 self._exit_code = -1
                 self._loop_should_stop.set()

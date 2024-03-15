@@ -1,7 +1,9 @@
 from openai import OpenAI
+from typing import Optional
 
 class GptWrapper:
-    def __init__(self, api_key: str=""):
+    def __init__(self, api_key: Optional[str] = "", model: str = "gpt-3.5-turbo"):
+        self.model = model
         if api_key:
             self.client = OpenAI(api_key=api_key)
         else:
@@ -9,7 +11,7 @@ class GptWrapper:
 
     def get_response(self, prompt: str) -> str:
         stream = self.client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=self.model,
             messages=[{"role": "assistant", "content": prompt}],
             stream=True
         )

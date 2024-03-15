@@ -18,15 +18,15 @@ intercom:
     "he_IL": "Hebrew"
     "en_US": "English"
 
-  prompt_prepend: "Your name is Intercom. You are an AI assistant, similar to Jarvis."
-
   default_language: "he_IL"
 
 tts:
-  use_gpu: True
-
   "gtts_language_map":
     "he_IL": "iw"
     "en_US": "en"
+
+ai:
+  type: "Gemini"
+  conversation_starter: "Your name is Intercom. You are an AI assistant, similar to Jarvis. Only speak in human understandable words and avoid formatting, code, etc. Answer in a short and concise way."
 
 log_level: "INFO"
