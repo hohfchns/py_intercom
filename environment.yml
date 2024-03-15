@@ -20,3 +20,4 @@ dependencies:
     - piney-event==0.0.3
     - netifaces==0.11.0
     - PyAudio==PyAudio==0.2.14
+    - google-generativeai==0.4.1
