@@ -1,6 +1,7 @@
 import os
 import tempfile
-import playsound
+from pydub import AudioSegment
+from pydub.playback import play
 from gtts import gTTS
 
 class TTSWrapper:
@@ -10,9 +11,10 @@ class TTSWrapper:
     def run(self, text: str, language: str) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tts = gTTS(text, lang=self.config["gtts_language_map"][language])
-            out_file = os.path.join(tmpdir, "intercom_output.wav")
+            out_file = os.path.join(tmpdir, "intercom_output.mp3")
             tts.save(out_file)
-            playsound.playsound(out_file, block=True)
+            sound = AudioSegment.from_mp3(out_file)
+            play(sound)
 
 
 if __name__ == "__main__":

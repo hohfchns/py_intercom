@@ -11,12 +11,12 @@ dependencies:
   - gTTS=2.5
   - openai=1.13
   - speechrecognition=3.10.1
-  - PyAudio=0.2
   - pyyaml=6.0.1
   - plac=1.4.3
-  - pygobject==3.46.0
+  - pygobject=3.46.0
+  - pydub=0.25.1
 
   - pip:
-    - playsound==1.3.0
     - piney-event==0.0.3
     - netifaces==0.11.0
+    - PyAudio==PyAudio==0.2.14
